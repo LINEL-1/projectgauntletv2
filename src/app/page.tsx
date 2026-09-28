@@ -66,6 +66,12 @@ const agents: Agent[] = [
 const stateStorageKey = "project-gauntlet-state-v1";
 const money = (value: number, currency = "CAD") => new Intl.NumberFormat("en-CA", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
 const pct = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`;
+function hasKickoffConfig(state: FlowState) {
+  return [state.start_date, state.end_date, state.investment_mandate, state.checkin_weekday_1, state.checkin_weekday_2]
+    .every((value) => typeof value === "string" && value.trim().length > 0)
+    && Number.isFinite(state.starting_capital)
+    && state.starting_capital > 0;
+}
 
 function Icon({ children }: { children: React.ReactNode }) {
   return <span className="icon" aria-hidden="true">{children}</span>;
@@ -150,7 +156,7 @@ function CountValue({ value }: { value: number }) {
   return <>{money(display)}</>;
 }
 
-function SetupScreen({ onComplete }: { onComplete: (state: FlowState) => void }) {
+function SetupScreen({ onComplete }: { onComplete: (state: FlowState, runId: string) => void }) {
   const [form, setForm] = useState({
     start_date: "2026-09-08",
     end_date: "2027-02-23",
@@ -160,7 +166,8 @@ function SetupScreen({ onComplete }: { onComplete: (state: FlowState) => void })
     checkin_weekday_2: "Thursday",
   });
   const [error, setError] = useState("");
-  const submit = (event: React.FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
     const startingCapital = Number(form.starting_capital);
@@ -168,18 +175,37 @@ function SetupScreen({ onComplete }: { onComplete: (state: FlowState) => void })
       setError("Enter a starting capital greater than zero.");
       return;
     }
-    onComplete({
-      initialized: true,
-      current_week: 1,
-      starting_capital: startingCapital,
-      start_date: form.start_date,
-      end_date: form.end_date,
-      investment_mandate: form.investment_mandate,
-      checkin_weekday_1: form.checkin_weekday_1,
-      checkin_weekday_2: form.checkin_weekday_2,
-      ledger: { cash: startingCapital, total_value: startingCapital, realised_pnl: 0, positions: [] },
-      session_history: [],
-    });
+    setBusy(true);
+    try {
+      const preflight = await fetch("/api/flow/inputs");
+      const preflightData = await preflight.json();
+      if (!preflight.ok) throw new Error(`Deployment check failed: ${preflightData.error || `GET /inputs returned HTTP ${preflight.status}`}`);
+
+      const response = await fetch("/api/flow/kickoff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...form, starting_capital: startingCapital, human_input: "" }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Kickoff failed.");
+
+      onComplete({
+        initialized: true,
+        current_week: 1,
+        starting_capital: startingCapital,
+        start_date: form.start_date,
+        end_date: form.end_date,
+        investment_mandate: form.investment_mandate,
+        checkin_weekday_1: form.checkin_weekday_1,
+        checkin_weekday_2: form.checkin_weekday_2,
+        ledger: { cash: startingCapital, total_value: startingCapital, realised_pnl: 0, positions: [] },
+        session_history: [],
+      }, data.run_id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to initialize the committee.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -202,7 +228,7 @@ function SetupScreen({ onComplete }: { onComplete: (state: FlowState) => void })
           <label>Check-in day two<select value={form.checkin_weekday_2} onChange={(event) => setForm({ ...form, checkin_weekday_2: event.target.value })}>{["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((day) => <option key={day}>{day}</option>)}</select></label>
         </div>
         {error && <div className="error-banner">{error}</div>}
-        <button className="primary-button" type="submit">Save committee setup<Icon>↗</Icon></button>
+        <button className="primary-button" type="submit" disabled={busy}>{busy ? "Starting first session..." : "Initialize and start session"}<Icon>↗</Icon></button>
       </form>
     </main>
   );
@@ -245,16 +271,16 @@ function parseTrades(text: string): Trade[] {
   return parsed;
 }
 
-function Deliberation({ state, onClose, onComplete }: { state: FlowState; onClose: () => void; onComplete: (state: FlowState) => void }) {
-  const [stage, setStage] = useState<"input" | "running" | "complete" | "failed">("input");
+function Deliberation({ state, onClose, onComplete, initialRunId }: { state: FlowState; onClose: () => void; onComplete: (state: FlowState) => void; initialRunId?: string }) {
+  const [stage, setStage] = useState<"input" | "running" | "complete" | "failed">(initialRunId ? "running" : "input");
   const [human, setHuman] = useState("");
   const [mandate, setMandate] = useState("");
-  const [runId, setRunId] = useState("");
+  const [runId, setRunId] = useState(initialRunId || "");
   const [outputs, setOutputs] = useState<Record<string, string>>({});
   const outputsRef = useRef<Record<string, string>>({});
   const [error, setError] = useState("");
   const [minutesOpen, setMinutesOpen] = useState(false);
-  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [startedAt, setStartedAt] = useState<number | null>(initialRunId ? Date.now() : null);
   const [elapsed, setElapsed] = useState(0);
 
   const kickoff = async () => {
@@ -410,14 +436,19 @@ export default function Home() {
     }
   }, []);
 
-  const saveState = (nextState: FlowState) => {
+  const [initialRunId, setInitialRunId] = useState("");
+  const saveState = (nextState: FlowState, runId?: string) => {
     window.localStorage.setItem(stateStorageKey, JSON.stringify(nextState));
     setState(nextState);
+    if (runId) {
+      setInitialRunId(runId);
+      setCheckinOpen(true);
+    }
   };
   const change = useMemo(() => state ? ((state.ledger.total_value - state.starting_capital) / state.starting_capital) * 100 : 0, [state]);
 
   if (loading) return <div className="loading-screen"><div className="loading-mark">PG<span>/</span>01</div><div className="loading-line" /></div>;
-  if (!state) return <SetupScreen onComplete={saveState} />;
+  if (!state || !hasKickoffConfig(state)) return <SetupScreen onComplete={saveState} />;
 
   const latest = state.session_history[state.session_history.length - 1];
   const progress = Math.min(Math.max(((state.ledger.total_value - 1000) / 150) * 100, 0), 100);
@@ -456,7 +487,7 @@ export default function Home() {
           </aside>
         </div>
       </main>
-      {checkinOpen && <Deliberation state={state} onClose={() => setCheckinOpen(false)} onComplete={saveState} />}
+      {checkinOpen && <Deliberation state={state} onClose={() => { setCheckinOpen(false); setInitialRunId(""); }} onComplete={saveState} initialRunId={initialRunId || undefined} />}
       {history && <div className="drawer-backdrop" onClick={() => setHistory(null)}><aside className="history-drawer" onClick={(event) => event.stopPropagation()}><button className="icon-button" onClick={() => setHistory(null)}>×</button><p className="eyebrow">Week {history.week} / official record</p><h2>Session minutes</h2><div className="drawer-rule" /><pre>{history.minutes}</pre></aside></div>}
     </div>
   );

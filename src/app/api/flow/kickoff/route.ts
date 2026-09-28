@@ -21,7 +21,10 @@ export async function POST(request: Request) {
     "investment_mandate",
     "start_date",
   ];
-  const missing = requiredInputs.filter((key) => body[key] === undefined || body[key] === "");
+  const missing = requiredInputs.filter((key) => {
+    const value = body[key];
+    return value === undefined || value === null || (typeof value === "string" && value.trim() === "");
+  });
   if (missing.length) {
     return NextResponse.json({ error: `Missing required flow inputs: ${missing.join(", ")}.` }, { status: 400 });
   }
