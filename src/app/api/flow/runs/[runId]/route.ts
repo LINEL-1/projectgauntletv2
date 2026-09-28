@@ -16,6 +16,7 @@ export async function GET(_request: Request, { params }: { params: { runId: stri
   return NextResponse.json({
     ...data,
     status,
+    result: data.result ?? data.result_json ?? null,
     outputs: data.outputs || data.result_json?.outputs || {},
     error: data.error || (status === "failed" ? data.status : undefined),
   });

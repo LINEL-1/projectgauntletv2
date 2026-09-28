@@ -26,15 +26,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Missing required flow inputs: ${missing.join(", ")}.` }, { status: 400 });
   }
 
-  const inputs: Record<string, unknown> = Object.fromEntries(requiredInputs.map((key) => [key, body[key]]));
+  const kickoffInputs: Record<string, unknown> = Object.fromEntries(
+    requiredInputs.map((key) => [key, body[key]]),
+  );
   if (typeof body.human_input === "string" && body.human_input.trim()) {
-    inputs.human_input = body.human_input;
+    kickoffInputs.human_input = body.human_input;
   }
 
   const response = await crewAiRequest("/kickoff", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ inputs }),
+    body: JSON.stringify(kickoffInputs),
   });
   const data = await response.json();
   if (!response.ok) return NextResponse.json(data, { status: response.status });
