@@ -39,9 +39,17 @@ export async function POST(request: Request) {
     body: JSON.stringify(kickoffInputs),
   });
   const data = await response.json();
-  if (!response.ok) return NextResponse.json(data, { status: response.status });
+  if (!response.ok) {
+    const message = [data?.error, data?.message, data?.detail, data?.result]
+      .find((value) => typeof value === "string" && value.trim());
+    const detail = typeof message === "string" ? message : JSON.stringify(data).slice(0, 500);
+    return NextResponse.json(
+      { error: `CrewAI kickoff failed (HTTP ${response.status})${detail ? `: ${detail}` : "."}` },
+      { status: response.status },
+    );
+  }
 
-  const runId = data.kickoff_id || data.run_id;
+  const runId = data?.kickoff_id || data?.run_id;
   if (!runId) {
     return NextResponse.json({ error: "CrewAI accepted the request but did not return a kickoff_id." }, { status: 502 });
   }
