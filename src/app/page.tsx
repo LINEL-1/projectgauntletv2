@@ -306,7 +306,6 @@ function Deliberation({ state, onClose, onComplete }: { state: FlowState; onClos
         }
         if (data.status !== "completed") return;
 
-        const resultText = typeof data.result === "string" ? data.result : JSON.stringify(data.result ?? "");
         const nextState = stateAfterRun(state, data.result);
         const nextOutputs = outputsFromState(nextState, data.result);
         outputsRef.current = nextOutputs;
