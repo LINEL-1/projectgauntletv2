@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   const response = await crewAiRequest("/kickoff", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(kickoffInputs),
+    body: JSON.stringify({ inputs: kickoffInputs }),
   });
   const data = await response.json();
   if (!response.ok) {
