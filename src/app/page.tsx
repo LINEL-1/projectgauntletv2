@@ -262,6 +262,17 @@ function Deliberation({ state, onClose, onComplete }: { state: FlowState; onClos
     setError("");
     setStartedAt(Date.now());
     try {
+      const inputsResponse = await fetch("/api/flow/inputs");
+      const inputsData = await inputsResponse.json();
+      if (!inputsResponse.ok) {
+        throw new Error(`Deployment check failed: ${inputsData.error || `GET /inputs returned HTTP ${inputsResponse.status}`}`);
+      }
+      if (Array.isArray(inputsData.inputs)) {
+        const required = ["start_date", "end_date", "starting_capital", "investment_mandate", "checkin_weekday_1", "checkin_weekday_2"];
+        const missing = required.filter((name) => !inputsData.inputs.includes(name));
+        if (missing.length) throw new Error(`This deployment is missing expected inputs: ${missing.join(", ")}.`);
+      }
+
       const response = await fetch("/api/flow/kickoff", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
