@@ -56,12 +56,12 @@ type FlowState = {
 type Agent = { key: string; name: string; model: string; tone: string; startSeconds: number };
 
 const agents: Agent[] = [
-  { key: "analyst_data_intake", name: "Analyst", model: "GPT-4o-mini · OpenAI", tone: "blue", startSeconds: 0 },
-  { key: "research_lead_update", name: "Research Lead", model: "Gemini 3.1 Flash Lite · Google", tone: "violet", startSeconds: 60 },
-  { key: "risk_officer_review", name: "Risk Officer", model: "mistral-medium-latest · Mistral", tone: "red", startSeconds: 120 },
+  { key: "analyst_data_intake", name: "Analyst", model: "Gemini 3.5 Flash Lite · Google", tone: "blue", startSeconds: 0 },
+  { key: "research_lead_update", name: "Research Lead", model: "Gemini 3.5 Flash Lite · Google", tone: "violet", startSeconds: 60 },
+  { key: "risk_officer_review", name: "Risk Officer", model: "Mistral Medium 3.5 · Mistral", tone: "red", startSeconds: 120 },
   { key: "pm_proposal", name: "Portfolio Manager", model: "Qwen 3.8-27B · Cerebras", tone: "amber", startSeconds: 180 },
-  { key: "cio_committee_debate", name: "CIO", model: "Nemotron Ultra 550B · Cerebras", tone: "green", startSeconds: 240 },
-  { key: "record_minutes_and_ledger", name: "Committee Secretary", model: "OpenAI", tone: "slate", startSeconds: 300 },
+  { key: "cio_committee_debate", name: "CIO", model: "GPT-5.4 · OpenAI", tone: "green", startSeconds: 240 },
+  { key: "record_minutes_and_ledger", name: "Committee Secretary", model: "Nemotron Ultra · Cerebras", tone: "slate", startSeconds: 300 },
 ];
 const stateStorageKey = "project-gauntlet-state-v1";
 const money = (value: number, currency = "CAD") => new Intl.NumberFormat("en-CA", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
