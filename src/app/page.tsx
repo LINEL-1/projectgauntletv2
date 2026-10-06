@@ -58,7 +58,7 @@ type Agent = { key: string; name: string; model: string; tone: string; startSeco
 const agents: Agent[] = [
   { key: "analyst_data_intake", name: "Analyst", model: "Gemini 3.5 Flash Lite · Google", tone: "blue", startSeconds: 0 },
   { key: "research_lead_update", name: "Research Lead", model: "Gemini 3.5 Flash Lite · Google", tone: "violet", startSeconds: 60 },
-  { key: "risk_officer_review", name: "Risk Officer", model: "Mistral Medium 3.5 · Mistral", tone: "red", startSeconds: 120 },
+  { key: "risk_officer_review", name: "Risk Officer", model: "Dots 3 Note Preview (OpenRouter)", tone: "red", startSeconds: 120 },
   { key: "pm_proposal", name: "Portfolio Manager", model: "poolside/laguna-s-2.1:free · OpenRouter", tone: "amber", startSeconds: 180 },
   { key: "cio_committee_debate", name: "CIO", model: "GPT-5.4 · OpenAI", tone: "green", startSeconds: 240 },
   { key: "record_minutes_and_ledger", name: "Committee Secretary", model: "Nemotron Ultra · Cerebras", tone: "slate", startSeconds: 300 },
