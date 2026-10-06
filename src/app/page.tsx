@@ -61,7 +61,7 @@ const agents: Agent[] = [
   { key: "risk_officer_review", name: "Risk Officer", model: "Dots 3 Note Preview (OpenRouter)", tone: "red", startSeconds: 120 },
   { key: "pm_proposal", name: "Portfolio Manager", model: "poolside/laguna-s-2.1:free · OpenRouter", tone: "amber", startSeconds: 180 },
   { key: "cio_committee_debate", name: "CIO", model: "GPT-5.4 · OpenAI", tone: "green", startSeconds: 240 },
-  { key: "record_minutes_and_ledger", name: "Committee Secretary", model: "Nemotron Ultra · Cerebras", tone: "slate", startSeconds: 300 },
+  { key: "record_minutes_and_ledger", name: "Committee Secretary", model: "GPT-5.4-mini (OpenAI)", tone: "slate", startSeconds: 300 },
 ];
 const stateStorageKey = "project-gauntlet-state-v1";
 const money = (value: number, currency = "CAD") => new Intl.NumberFormat("en-CA", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
