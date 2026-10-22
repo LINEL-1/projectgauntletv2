@@ -187,7 +187,7 @@ function SetupScreen({ onComplete }: { onComplete: (state: FlowState, runId: str
     start_date: "2026-10-19",
     end_date: "2027-04-05",
     starting_capital: "1000",
-    investment_mandate: "Grow a $1,000 CAD starting portfolio to a $150 profit within 24 weeks. Invest primarily in technology stocks (software, semiconductors, hardware, AI, internet, cybersecurity), but other sectors are allowed too. No single company may exceed 40% of total portfolio value.",
+    investment_mandate: "The initial investment is exactly $1,000 CAD and no additional capital may be added; total spending on purchases may never exceed the available cash, so the portfolio can never be invested beyond $1,000 CAD of capital. Grow this $1,000 CAD starting portfolio to a $150 profit within 24 weeks. Invest primarily in technology stocks (software, semiconductors, hardware, AI, internet, cybersecurity), but other sectors are allowed too. No single company may exceed 40% of total portfolio value.",
     checkin_weekday_1: "Monday",
     checkin_weekday_2: "Thursday",
   });
