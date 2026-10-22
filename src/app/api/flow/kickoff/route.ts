@@ -35,6 +35,9 @@ export async function POST(request: Request) {
   if (typeof body.human_input === "string" && body.human_input.trim()) {
     kickoffInputs.human_input = body.human_input;
   }
+  if (typeof body.current_week === "number" && body.current_week > 0) kickoffInputs.current_week = body.current_week;
+  if (body.ledger && typeof body.ledger === "object" && !Array.isArray(body.ledger)) kickoffInputs.ledger = body.ledger;
+  if (Array.isArray(body.session_history)) kickoffInputs.session_history = body.session_history;
 
   const response = await crewAiRequest("/kickoff", {
     method: "POST",

@@ -335,6 +335,9 @@ function Deliberation({ state, onClose, onComplete, initialRunId }: { state: Flo
           investment_mandate: mandate || state.investment_mandate,
           checkin_weekday_1: state.checkin_weekday_1,
           checkin_weekday_2: state.checkin_weekday_2,
+          current_week: state.current_week,
+          ledger: state.ledger,
+          session_history: state.session_history,
           human_input: human,
         }),
       });
