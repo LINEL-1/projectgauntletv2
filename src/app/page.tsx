@@ -58,9 +58,9 @@ type Agent = { key: string; name: string; model: string; tone: string; startSeco
 const agents: Agent[] = [
   { key: "analyst_data_intake", name: "Analyst", model: "Gemini 3.5 Flash Lite · Google", tone: "blue", startSeconds: 0 },
   { key: "research_lead_update", name: "Research Lead", model: "Gemini 3.5 Flash Lite · Google", tone: "violet", startSeconds: 60 },
-  { key: "risk_officer_review", name: "Risk Officer", model: "Nemotron Ultra · OpenRouter", tone: "red", startSeconds: 120 },
+  { key: "risk_officer_review", name: "Risk Officer", model: "GPT-5.4-mini (OpenAI)", tone: "red", startSeconds: 120 },
   { key: "pm_proposal", name: "Portfolio Manager", model: "Gemini 3.5 Flash Lite · Google", tone: "amber", startSeconds: 180 },
-  { key: "cio_committee_debate", name: "CIO", model: "Nemotron Ultra · OpenRouter", tone: "green", startSeconds: 240 },
+  { key: "cio_committee_debate", name: "CIO", model: "GPT-5.4 (OpenAI)", tone: "green", startSeconds: 240 },
   { key: "record_minutes_and_ledger", name: "Committee Secretary", model: "GPT-5.4-mini (OpenAI)", tone: "slate", startSeconds: 300 },
 ];
 const stateStorageKey = "project-gauntlet-state-v1";
