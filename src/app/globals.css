@@ -37,3 +37,5 @@
 .app-shell.light .minutes-sheet { background:#fffdf8; }
 .app-shell.light .setup-shell { background:radial-gradient(circle at 100% 20%,#e1ead5 0,transparent 34rem),var(--canvas); }
 .app-shell.light .setup-form { border-color:var(--line); }
+
+.reset-button { border:1px solid var(--line); padding:9px 13px; background:transparent; color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; } .reset-button:hover { border-color:var(--red); color:var(--red); }

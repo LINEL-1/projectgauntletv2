@@ -478,6 +478,23 @@ export default function Home() {
       setCheckinOpen(true);
     }
   };
+  const resetPortfolio = () => {
+    if (!state || !window.confirm("Reset everything? This clears the ledger, positions and session history and starts over at Week 1 with your starting capital.")) return;
+    saveState({
+      initialized: true,
+      current_week: 1,
+      starting_capital: state.starting_capital,
+      start_date: state.start_date,
+      end_date: state.end_date,
+      investment_mandate: state.investment_mandate,
+      checkin_weekday_1: state.checkin_weekday_1,
+      checkin_weekday_2: state.checkin_weekday_2,
+      ledger: { cash: state.starting_capital, total_value: state.starting_capital, realised_pnl: 0, positions: [] },
+      session_history: [],
+    });
+    setHistory(null);
+    setError("");
+  };
   const change = useMemo(() => state ? ((state.ledger.total_value - state.starting_capital) / state.starting_capital) * 100 : 0, [state]);
 
   if (loading) return <div className="loading-screen"><div className="loading-mark">PG<span>/</span>01</div><div className="loading-line" /></div>;
@@ -492,10 +509,10 @@ export default function Home() {
     <div className={light ? "app-shell light" : "app-shell"}>
       <header className="topbar">
         <div className="brand"><span className="brand-mark">PG<span>/</span>01</span><span className="brand-title">Project Gauntlet <b>Investment Committee</b></span></div>
-        <div className="top-actions"><span className="status-label"><i className={change >= 0 ? "status-dot good" : "status-dot warn"} />{change >= 0 ? "On pace" : "Needs attention"}</span><span className="week-pill">Week {state.current_week} <span>of 24</span></span><button className="theme-toggle" onClick={() => setLight(!light)} aria-label="Toggle theme">{light ? "☾" : "☼"}</button></div>
+        <div className="top-actions"><span className="status-label"><i className={change >= 0 ? "status-dot good" : "status-dot warn"} />{change >= 0 ? "On pace" : "Needs attention"}</span><span className="week-pill">Week {state.current_week} <span>of 24</span></span><button className="reset-button" onClick={resetPortfolio}>Reset</button><button className="theme-toggle" onClick={() => setLight(!light)} aria-label="Toggle theme">{light ? "☾" : "☼"}</button></div>
       </header>
       <main className="dashboard">
-        <div className="hero-row"><div><p className="eyebrow">Project Gauntlet · Weekly review <span className="live-dot" /></p><h1>The room is <em>watching.</em></h1><p className="hero-sub">CAD account · S&amp;P 500 mandate · {state.checkin_weekday_1} / {state.checkin_weekday_2}</p></div><button className="primary-button kickoff" onClick={() => setCheckinOpen(true)}><span className="button-pulse" />Start check-in<Icon>↗</Icon></button></div>
+        <div className="hero-row"><div><p className="eyebrow">Project Gauntlet · Weekly review <span className="live-dot" /></p><h1>The room is <em>watching.</em></h1><p className="hero-sub">CAD account · Tech-focused mandate · {state.checkin_weekday_1} / {state.checkin_weekday_2}</p></div><button className="primary-button kickoff" onClick={() => setCheckinOpen(true)}><span className="button-pulse" />Start check-in<Icon>↗</Icon></button></div>
         {error && <div className="error-banner subtle">{error}</div>}
         <section className="metrics-grid">
           <div className="metric-card featured"><span className="metric-label">Total portfolio value<i>CAD</i></span><strong><CountValue value={state.ledger.total_value} /></strong><div className="metric-foot"><span className={change >= 0 ? "positive" : "negative"}>{change >= 0 ? "↗" : "↘"} {pct(change)}</span><span>vs. {money(state.starting_capital)}</span></div></div>
