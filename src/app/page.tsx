@@ -100,7 +100,10 @@ function stateAfterRun(previous: FlowState, result: unknown): FlowState {
   const snapshot = parseSnapshot(result);
   if (snapshot) return { ...previous, ...snapshot };
 
-  const minutes = typeof result === "string" ? result : JSON.stringify(result ?? "");
+  if (typeof result !== "string") return previous;
+  const minutes = result.trim();
+  if (!minutes || /^\d+(?:\.\d+)?$/.test(minutes)) return previous;
+
   const week = previous.current_week;
   const summary = minutes.split(/\n/).map((line) => line.trim()).find(Boolean) || "Committee session completed. See the official minutes.";
   return {
@@ -129,9 +132,13 @@ function outputsFromState(state: FlowState, fallback: unknown): Record<string, s
     cio_committee_debate: asText(week?.cio),
     record_minutes_and_ledger: asText(week?.minutes),
   };
-  const fallbackText = typeof fallback === "string" ? fallback : JSON.stringify(fallback ?? "");
+  const fallbackText = typeof fallback === "string" && fallback.trim() && !/^\d+(?:\.\d+)?$/.test(fallback.trim()) ? fallback.trim() : "";
   for (const key of Object.keys(outputs)) {
-    if (!outputs[key]) outputs[key] = fallbackText || "No output was returned for this agent.";
+    if (!outputs[key]) {
+      outputs[key] = key === "record_minutes_and_ledger" && fallbackText
+        ? fallbackText
+        : "No per-agent output was exposed by this deployment.";
+    }
   }
   return outputs;
 }
