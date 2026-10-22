@@ -9,7 +9,7 @@ A self-contained Next.js 14 App Router frontend for Project Gauntlet, a weekly, 
 
 ```env
 CREWAI_API_KEY=...
-CREWAI_BASE_URL=https://project-gauntlet-037d05be-3d8e-4a76-a91c-6a-8d8e2f69.crewai.com
+CREWAI_BASE_URL=https://prompt-v29-crewai-project-952d6a6e-f4a6-4be-7d65601e.crewai.com
 CREWAI_FLOW_ID=037d05be-3d8e-4a76-a91c-6a-8d8e2f69
 ```
 
