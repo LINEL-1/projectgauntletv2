@@ -77,16 +77,35 @@ function Icon({ children }: { children: React.ReactNode }) {
   return <span className="icon" aria-hidden="true">{children}</span>;
 }
 
+function firstJsonObject(text: string): unknown {
+  const start = text.indexOf("{");
+  if (start < 0) return null;
+  let depth = 0;
+  let inString = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (ch === "\\") i++;
+      else if (ch === "\"") inString = false;
+    } else if (ch === "\"") inString = true;
+    else if (ch === "{") depth++;
+    else if (ch === "}" && --depth === 0) {
+      try { return JSON.parse(text.slice(start, i + 1)); } catch { return null; }
+    }
+  }
+  return null;
+}
+
 function parseSnapshot(result: unknown): FlowState | null {
   let parsed: unknown = result;
-  if (typeof result === "string") {
+  if (parsed && typeof parsed === "object" && typeof (parsed as { raw?: unknown }).raw === "string") {
+    parsed = (parsed as { raw: string }).raw;
+  }
+  if (typeof parsed === "string") {
     try {
-      parsed = JSON.parse(result);
+      parsed = JSON.parse(parsed);
     } catch {
-      const fenced = result.match(/```(?:json)?\s*([\s\S]*?)```/i);
-      if (fenced) {
-        try { parsed = JSON.parse(fenced[1]); } catch { return null; }
-      } else return null;
+      parsed = firstJsonObject(parsed as string);
     }
   }
   if (!parsed || typeof parsed !== "object") return null;
@@ -165,10 +184,10 @@ function CountValue({ value }: { value: number }) {
 
 function SetupScreen({ onComplete }: { onComplete: (state: FlowState, runId: string) => void }) {
   const [form, setForm] = useState({
-    start_date: "2026-09-08",
-    end_date: "2027-02-23",
+    start_date: "2026-10-19",
+    end_date: "2027-04-05",
     starting_capital: "1000",
-    investment_mandate: "Long-only S&P 500 equities with disciplined risk controls.",
+    investment_mandate: "Grow a $1,000 CAD starting portfolio to a $150 profit within 24 weeks. Invest primarily in technology stocks (software, semiconductors, hardware, AI, internet, cybersecurity), but other sectors are allowed too. No single company may exceed 40% of total portfolio value.",
     checkin_weekday_1: "Monday",
     checkin_weekday_2: "Thursday",
   });
@@ -338,11 +357,13 @@ function Deliberation({ state, onClose, onComplete, initialRunId }: { state: Flo
 
   useEffect(() => {
     if (stage !== "running" || !runId) return;
+    let failures = 0;
     const poll = async () => {
       try {
         const response = await fetch(`/api/flow/runs/${encodeURIComponent(runId)}`);
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Unable to poll the committee run.");
+        failures = 0;
         if (data.status === "failed") {
           setError(data.error || data.result || "The committee run failed.");
           setStage("failed");
@@ -357,6 +378,8 @@ function Deliberation({ state, onClose, onComplete, initialRunId }: { state: Flo
         onComplete(nextState);
         setStage("complete");
       } catch (err) {
+        failures += 1;
+        if (failures < 6) return;
         setError(err instanceof Error ? err.message : "Polling failed.");
         setStage("failed");
       }
