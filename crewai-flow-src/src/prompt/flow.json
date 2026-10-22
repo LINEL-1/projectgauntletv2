@@ -1,0 +1,438 @@
+{
+  "name": "InvestmentCommitteeSimulator",
+  "state": {
+    "type": "json_schema",
+    "json_schema": {
+      "type": "object",
+      "required": [
+        "start_date",
+        "end_date",
+        "starting_capital",
+        "investment_mandate",
+        "checkin_weekday_1",
+        "checkin_weekday_2"
+      ],
+      "properties": {
+        "ledger": {
+          "type": "object",
+          "properties": {
+            "cash": {
+              "type": "number"
+            },
+            "as_of": {
+              "type": "string"
+            },
+            "usd_cad": {
+              "type": "number"
+            },
+            "positions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "as_of": {
+                    "type": "string"
+                  },
+                  "shares": {
+                    "type": "number"
+                  },
+                  "ticker": {
+                    "type": "string"
+                  },
+                  "price_cad": {
+                    "type": "number"
+                  },
+                  "price_usd": {
+                    "type": "number"
+                  },
+                  "cost_basis": {
+                    "type": "number"
+                  },
+                  "current_price": {
+                    "type": "number"
+                  },
+                  "unrealised_pnl": {
+                    "type": "number"
+                  },
+                  "current_price_cad": {
+                    "type": "number"
+                  }
+                }
+              }
+            },
+            "total_value": {
+              "type": "number"
+            },
+            "realised_pnl": {
+              "type": "number"
+            }
+          }
+        },
+        "quotes": {
+          "type": "object",
+          "properties": {
+            "as_of": {
+              "type": "string"
+            },
+            "tickers": {
+              "type": "object",
+              "properties": {
+                "placeholder": {
+                  "type": "string"
+                }
+              }
+            },
+            "usd_cad": {
+              "type": "number"
+            }
+          }
+        },
+        "end_date": {
+          "type": "string"
+        },
+        "start_date": {
+          "type": "string"
+        },
+        "human_input": {
+          "type": "string",
+          "default": ""
+        },
+        "pm_proposal": {
+          "type": "string"
+        },
+        "risk_review": {
+          "type": "string"
+        },
+        "cio_decision": {
+          "type": "string"
+        },
+        "current_week": {
+          "type": "integer",
+          "default": 1
+        },
+        "session_recap": {
+          "type": "string"
+        },
+        "analyst_summary": {
+          "type": "string"
+        },
+        "research_update": {
+          "type": "string"
+        },
+        "session_history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "week": {
+                "type": "integer"
+              },
+              "minutes": {
+                "type": "string"
+              },
+              "final_decision": {
+                "type": "string"
+              },
+              "ledger_snapshot": {
+                "type": "object",
+                "properties": {
+                  "cash": {
+                    "type": "number"
+                  },
+                  "total_value": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "starting_capital": {
+          "type": "number"
+        },
+        "checkin_weekday_1": {
+          "type": "string"
+        },
+        "checkin_weekday_2": {
+          "type": "string"
+        },
+        "committee_minutes": {
+          "type": "string"
+        },
+        "investment_mandate": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "schema": "crewai.flow/v1",
+  "methods": {
+    "pm_proposal": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "llm": {
+            "model": "gemini/gemini-3.5-flash-lite"
+          },
+          "goal": "Propose a specific, sized buy, sell, or hold action for each position and for any candidate new positions, justified against the investment mandate (technology preferred, other sectors allowed, 15% total return target over 24 weeks: 1,000 CAD growing to at least 1,150 CAD) and informed by the committee's prior outputs.",
+          "role": "Portfolio Manager",
+          "input": "PRICE INTEGRITY RULES (mandatory): The only valid source of stock prices, price changes and the USD/CAD exchange rate is the get_market_quotes tool (or numbers explicitly copied from its output earlier in this committee record). Never estimate, recall, guess or invent a price, share count or FX rate. Always quote the as_of date with any price. If the tool returns an error for a ticker, say the price is unavailable and do not propose or approve a trade for it.\n\nAnalyst Summary:\n${outputs.analyst_data_intake.raw}\n\nResearch Update:\n${outputs.research_lead_update.raw}\n\nRisk Review:\n${outputs.risk_officer_review.raw}\n\nInvestment Mandate:\n${state.investment_mandate}\n\nUniverse: any liquid listed stock; technology preferred, other sectors allowed; no single company may exceed 40% of total portfolio value. Prefer technology sector and popular, widely-followed companies.\nGrowth target: 1,000 CAD starting capital must reach at least 1,150 CAD by end of Week 24 (15% total return).\n\nAvailable portfolio ledger (cash, positions):\n${state.ledger}\n\nHuman committee observer note (if provided, treat this as input from a senior observer -- address it directly in your proposal):\n${state.human_input}\n\nProduce a PM Proposal covering:\n1. For every current holding: Action (Buy more / Sell / Reduce / Hold), proposed size change in shares and estimated CAD value, and rationale tied to the mandate, growth target, and research.\n2. For any new candidate position surfaced by research (any sector, tech/popular bias): Action (Initiate / Pass), proposed entry size in shares and CAD value, and rationale explaining how it contributes to the 15% target.\n3. A brief summary of the proposed portfolio after these trades: estimated cash remaining, sector exposures, and how the portfolio is tracking toward the 1,150 CAD target.\n4. If a human observer note was provided above, explicitly state whether you agree or disagree with it and why.\n\nExpected output: A structured PM Proposal with a per-position action table (ticker, current action, proposed size in shares and CAD, rationale), a direct response to any human observer note, and a post-trade portfolio summary showing estimated cash, sector exposures, and projected progress toward the 1,150 CAD target.\n\nSIZING: Before proposing any new or increased position, call get_market_quotes for those tickers and size each trade from the returned price_cad. Total proposed purchases must not exceed available cash, and no single company may exceed 40% of total portfolio value.",
+          "verbose": true,
+          "backstory": "You are the Portfolio Manager of an investment committee running a growth-oriented CAD-denominated portfolio. The mandate is strict: you may trade any liquid listed stock. Within that universe you strongly favour the technology sector and widely-followed, popular companies with high analyst coverage and strong brand recognition. Your singular performance goal is to grow the portfolio from 1,000 CAD to at least 1,150 CAD (15% return) by the end of Week 24. Every week you translate research and risk intelligence into concrete trading proposals. Each recommendation must include a specific action (Buy / Sell / Hold / Initiate / Reduce), a proposed size in both shares and CAD amount, and a clear justification tied to the mandate, the growth target, and the week's research and risk findings. You take the Risk Officer's flags seriously but you are willing to defend your convictions with evidence when the thesis is sound.",
+          "inject_date": true,
+          "tools": [
+            "custom:market_quotes"
+          ]
+        }
+      },
+      "start": false,
+      "listen": "risk_officer_review",
+      "router": false,
+      "description": "Phase 4 — The Portfolio Manager reads all prior outputs and proposes a specific buy, sell, or hold action with sizing for each position, justified against the investment mandate (tech preferred, other sectors allowed, 15% growth target of 1,000 CAD to 1,150 CAD). Incorporates any human input from the user."
+    },
+    "current_week": {
+      "do": {
+        "call": "expression",
+        "expr": "state.current_week + 1"
+      },
+      "start": false,
+      "listen": "record_minutes_and_ledger",
+      "router": false,
+      "description": "Increments the week counter in state after each session completes, so the next check-in starts on the correct week number. No longer the terminal method — finalize_session runs after this."
+    },
+    "finalize_session": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "llm": {
+            "model": "openai/gpt-4o-mini"
+          },
+          "goal": "Assemble and return the complete session result JSON so the frontend can render every agent card, the portfolio ledger, the approved trades, and the committee minutes from a single API response.",
+          "role": "Session Finalizer",
+          "input": "Assemble the final session result JSON from the outputs below. Return ONLY a valid JSON object — no markdown fences, no prose, no extra text.\n\nRequired output shape:\n{\n  \"state_snapshot\": {\n    \"current_week\": <next week integer>,\n    \"start_date\": \"...\",\n    \"end_date\": \"...\",\n    \"starting_capital\": <number>,\n    \"investment_mandate\": \"...\",\n    \"checkin_weekday_1\": \"...\",\n    \"checkin_weekday_2\": \"...\",\n    \"ledger\": { \"cash\": <number>, \"total_value\": <number>, \"positions\": [...] },\n    \"session_history\": [ { \"week\": <int>, \"minutes\": \"...\", \"final_decision\": \"...\", \"ledger_snapshot\": { \"cash\": <number>, \"total_value\": <number> } } ],\n    \"this_week_outputs\": {\n      \"analyst\": \"...\",\n      \"research\": \"...\",\n      \"risk\": \"...\",\n      \"pm\": \"...\",\n      \"cio\": \"...\",\n      \"minutes\": \"...\"\n    },\n    \"approved_trades\": [ { \"ticker\": \"...\", \"action\": \"BUY|SELL|HOLD|REDUCE|INITIATE\", \"shares\": <number>, \"approx_cad_value\": <number>, \"rationale\": \"...\" } ]\n  }\n}\n\nData to use:\n\nNEXT WEEK NUMBER (current_week output): ${outputs.current_week}\n\nSTATE FIELDS:\n- start_date: ${state.start_date}\n- end_date: ${state.end_date}\n- starting_capital: ${state.starting_capital}\n- investment_mandate: ${state.investment_mandate}\n- checkin_weekday_1: ${state.checkin_weekday_1}\n- checkin_weekday_2: ${state.checkin_weekday_2}\n- ledger: IGNORE state.ledger (it is stale). Use the 'ledger' object (with usd_cad and as_of, and positions with price_usd and price_cad) from the Minutes and Ledger crew output below.\n- session_history: ${state.session_history}\n\nTHIS WEEK AGENT OUTPUTS:\n- Analyst: ${outputs.analyst_data_intake.raw}\n- Research: ${outputs.research_lead_update.raw}\n- Risk: ${outputs.risk_officer_review.raw}\n- PM Proposal: ${outputs.pm_proposal.raw}\n- CIO Decision: ${outputs.cio_committee_debate.raw}\n- Minutes and Ledger crew (emit_state_snapshot task): ${outputs.record_minutes_and_ledger.raw}\n\nBuild the JSON using the above. For approved_trades, parse the APPROVED TRADES TABLE from the CIO Decision output. For the minutes field in this_week_outputs, use the write_minutes task content from the Minutes and Ledger crew output. For session_history, use the existing state.session_history array — do not modify or re-summarise it. Output ONLY the JSON object.\n\nExpected output: A single valid JSON object matching the state_snapshot shape exactly, with no surrounding markdown, prose, or extra text. All string fields populated from the provided inputs. approved_trades is an array parsed from the CIO APPROVED TRADES TABLE. If any input section is missing or contains NO DATA, set that field to null rather than inventing a value.",
+          "verbose": true,
+          "backstory": "You are a data assembly agent. Your only job is to take the structured outputs already produced by the crew this session and repackage them into one clean JSON object. You never invent data — you only relay what was produced. If any section of your input contains NO DATA, you relay that marker in the relevant field rather than inventing a substitute.",
+          "inject_date": true
+        }
+      },
+      "start": false,
+      "listen": "current_week",
+      "router": false,
+      "description": "Terminal method — listens after the week counter increments and returns the complete session result as a JSON string. This is the flow's final return value, replacing the bare integer that was previously returned by current_week."
+    },
+    "analyst_data_intake": {
+      "do": {
+        "call": "crew",
+        "with": {
+          "tasks": [
+            {
+              "name": "extract_holdings",
+              "agent": "analyst",
+              "description": "Read the session recap carefully. Extract from the portfolio ledger section every open position currently held. For each position record: ticker symbol, number of shares held, cost basis per share, and the total cash balance. If the session recap states the portfolio is empty or week 1 with no prior trades, state that explicitly. Do NOT search the internet for this task \\ read only from the session recap text. Output a clean structured table of all holdings plus the cash balance.\n\nSession recap:\n{session_recap}",
+              "expected_output": "A structured holdings table with columns: Ticker, Shares Held, Cost Basis Per Share (CAD), plus the total cash balance. If no positions exist, state 'No open positions' and list the cash balance."
+            },
+            {
+              "name": "price_action_research",
+              "agent": "analyst",
+              "description": "Using the holdings table from the previous task, call the get_market_quotes tool ONCE with all held tickers as a comma-separated list (e.g. 'META,NVDA'). Report exactly what it returns for each ticker: price_usd, price_cad, as_of date and week_change_pct, plus the usd_cad rate. Do NOT take prices from web search. You may use web search only for qualitative news about a ticker. If there are no open positions, skip the tool call and state that.\n\nHolding from previous task: (provided in context by the crew)",
+              "expected_output": "For each held ticker: price_usd, price_cad, as_of, week_change_pct exactly as returned by get_market_quotes, and the usd_cad rate. Or 'No open positions'."
+            },
+            {
+              "name": "analyst_summary",
+              "agent": "analyst",
+              "description": "Using the holdings table (task 1) and the live price data (task 2), produce the full Analyst Summary for this week's committee meeting.\n\nFor each position compute and state:\n- Ticker\n- Number of shares (from holdings table)\n- Cost basis per share in CAD (from holdings table)\n- Current market price in USD and CAD (exactly as returned by get_market_quotes, with its as_of date)\n- Total position value = shares × current price (state currency clearly)\n- Unrealised P&L in dollar terms and percentage terms (compare current price vs cost basis; note any CAD/USD currency difference if relevant)\n\nAlso state:\n- Total cash on hand (from holdings table)\n- Total portfolio value (sum of all positions + cash)\n- Flag any position that has moved more than 5% in either direction this week\n\nKeep the summary factual and structured. State the usd_cad rate used. Do not invent numbers \\ use only what came from the holdings table and the price research.",
+              "expected_output": "A structured Analyst Summary covering every open position (ticker, shares, cost basis, current price, total value, unrealised P&L), total cash, total portfolio value, and flagged positions with notable weekly price moves."
+            }
+          ],
+          "agents": {
+            "analyst": {
+              "llm": {
+                "model": "gemini/gemini-3.5-flash-lite"
+              },
+              "goal": "Summarise current portfolio holdings, cost basis, cash position, unrealised P&L, and recent price action for each position from the session recap.",
+              "role": "Portfolio Analyst",
+              "tools": [
+                "crewai_tools:EXASearchTool",
+                "custom:market_quotes"
+              ],
+              "verbose": true,
+              "backstory": "You are a meticulous portfolio analyst at an investment committee. Your job is to translate raw ledger data and market price information into a clear, structured analytical summary that the rest of the committee can act on. You never speculate \\ you report facts precisely. You always read the full portfolio ledger from the session recap to extract every position's ticker, share count, and cost basis before searching for live prices. You ONLY use prices and FX rates returned by the get_market_quotes tool. You never estimate, recall or invent prices, share counts or exchange rates. If the tool reports an error for a ticker, you state that and do not compute a value for it.",
+              "inject_date": true
+            }
+          },
+          "inputs": {
+            "session_recap": "${outputs.compile_session_recap.raw}"
+          },
+          "verbose": true
+        }
+      },
+      "start": false,
+      "listen": "compile_session_recap",
+      "router": false,
+      "description": "Phase 1 — The Analyst receives the session recap and summarises current portfolio holdings, cost basis, cash position, unrealised P&L, and recent price action for each position."
+    },
+    "risk_officer_review": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "llm": {
+            "model": "openai/gpt-5.4-mini"
+          },
+          "goal": "Identify and articulate concentration risk, volatility concerns, and investment mandate compliance issues across the portfolio (technology preferred, other sectors allowed, 15% growth target of 1,000 CAD to 1,150 CAD), and explicitly challenge any overconfident positions.",
+          "role": "Risk Officer",
+          "input": "PRICE INTEGRITY RULES (mandatory): Use only the prices, as_of dates and USD/CAD rate that appear in the Analyst Summary, Research Update and PM Proposal (these came from a live market-data tool). Never estimate, recall or invent a price, share count or FX rate, and never alter those numbers. If a price is marked unavailable, flag that ticker's trade as unexecutable. The portfolio's total capital is exactly 1,000 CAD; total purchases may never exceed available cash.\n\nAnalyst Summary:\n${outputs.analyst_data_intake.raw}\n\nResearch Update:\n${outputs.research_lead_update.raw}\n\nInvestment Mandate:\n${state.investment_mandate}\n\nUniverse: any liquid listed stock; technology preferred, other sectors allowed; no single company may exceed 40% of total portfolio value. Prefer technology sector and popular, widely-followed companies.\nGrowth target: 1,000 CAD starting capital must reach at least 1,150 CAD by end of Week 24 (15% total return).\n\nUsing the above, produce a structured Risk Review covering:\n1. Universe compliance: does every current and proposed position have a live market price available? Flag any that do not.\n2. Concentration risk: are any single positions or sectors representing an outsized share of portfolio value? Flag any position above 20% of total portfolio value as a concern.\n3. Volatility concerns: which positions showed significant price swings this week or face near-term catalysts that could increase volatility?\n4. Mandate compliance: does the portfolio align with the tech/popular bias and the 40% single-company cap? Call out any drift explicitly.\n5. Growth target pace check: based on current portfolio value, is the portfolio on track to reach 1,150 CAD by Week 24? State how many CAD of gains are still needed and how many weeks remain. Flag if the portfolio is falling behind.\n6. Overconfident theses: identify any holding or narrative in the research update that relies on optimistic assumptions without adequate downside consideration, and state the bear case clearly.\n7. Overall risk rating for the portfolio this week: Low / Medium / High, with a one-sentence rationale.\n\nExpected output: A structured Risk Review with sections on universe and 40% cap compliance, concentration risk, volatility concerns, mandate compliance (tech/popular bias), growth target pace check (progress toward 1,150 CAD), overconfident theses challenged with bear cases, and an overall portfolio risk rating (Low/Medium/High) with rationale.",
+          "verbose": true,
+          "backstory": "You are the Risk Officer of an investment committee managing a CAD-denominated growth portfolio. The mandate constraints you enforce are: (1) positions should be liquid, publicly traded stocks that have a live market price available; (2) the portfolio favours the technology sector and popular widely-followed companies; (3) the performance target is 15% total return over 24 weeks (1,000 CAD to 1,150 CAD). You scrutinise every position against these constraints, flag any single-stock or sector concentration that could harm the portfolio, highlight volatility and liquidity risks, and push back firmly but constructively on any thesis that sounds overconfident or insufficiently stress-tested. You also flag when the portfolio is falling behind the 15% pace and when risk-taking is either too aggressive or too timid given how many weeks remain. You are never a yes-person. Work only from the data provided in your input — do not invent figures, prices, or portfolio values. If the input is missing or empty, output: NO DATA: analyst or research input returned nothing.",
+          "inject_date": true
+        }
+      },
+      "start": false,
+      "listen": "research_lead_update",
+      "router": false,
+      "description": "Phase 3 — The Risk Officer reads both prior outputs and flags concentration risk, volatility concerns, and mandate compliance issues (flexible universe (tech preferred), tech/popular bias, 15% growth target), explicitly challenging overconfident positions."
+    },
+    "cio_committee_debate": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "llm": {
+            "model": "openai/gpt-5.4"
+          },
+          "goal": "Chair the investment committee debate, weigh the disagreement between the Portfolio Manager and Risk Officer, and render a final reconciled investment decision with full rationale. Every decision must respect the mandate: any listed stock, preference for technology sector and popular companies, and the overriding goal of growing the portfolio from 1,000 CAD to at least 1,150 CAD by Week 24.",
+          "role": "Chief Investment Officer",
+          "input": "PRICE INTEGRITY RULES (mandatory): Use only the prices, as_of dates and USD/CAD rate that appear in the Analyst Summary, Research Update and PM Proposal (these came from a live market-data tool). Never estimate, recall or invent a price, share count or FX rate, and never alter those numbers. If a price is marked unavailable, flag that ticker's trade as unexecutable. The portfolio's total capital is exactly 1,000 CAD; total purchases may never exceed available cash.\n\nFull committee record this session:\n\nAnalyst Summary:\n${outputs.analyst_data_intake.raw}\n\nResearch Update:\n${outputs.research_lead_update.raw}\n\nRisk Review:\n${outputs.risk_officer_review.raw}\n\nPM Proposal:\n${outputs.pm_proposal.raw}\n\nInvestment Mandate:\n${state.investment_mandate}\n\nUniverse: any liquid listed stock; technology preferred, other sectors allowed; no single company may exceed 40% of total portfolio value. Prefer technology sector and popular, widely-followed companies.\nGrowth target: 1,000 CAD starting capital must reach at least 1,150 CAD by end of Week 24 (15% total return).\n\nHuman committee observer note (if provided, this comes from a senior stakeholder -- acknowledge it explicitly in your final decision and state whether you acted on it):\n${state.human_input}\n\nAs CIO, chair the committee debate and produce the Final Decision document covering:\n1. Summary of the PM's key proposals and justifications\n2. Summary of the Risk Officer's key objections and flags\n3. Points of agreement between PM and Risk Officer\n4. Points of genuine disagreement and your resolution of each with reasoning\n5. The Final Decision: for each position, the approved action (Buy / Sell / Reduce / Hold / Initiate), approved size in shares and CAD, and CIO rationale; confirm no approved position exceeds 40% of total portfolio value\n6. APPROVED TRADES TABLE: a clearly labelled section with one row per trade in this exact format -- Ticker | Action | Shares | Approx CAD Value | Rationale (one sentence)\n7. Growth target status: current portfolio value vs. 1,150 CAD target, weeks remaining, and your assessment of whether the approved decisions keep the portfolio on pace\n8. Human observer note response: explicitly acknowledge the note and state whether you incorporated it, overruled it, or partially acted on it\n9. Any conditions or triggers that would cause this decision to be revisited before next week\n10. Action items for next session\n\nExpected output: A structured Final Decision document with: PM-vs-Risk debate summary, resolution of disagreements, the approved action for every position with sizing in shares and CAD and CIO rationale, a clearly labelled APPROVED TRADES TABLE (Ticker | Action | Shares | Approx CAD Value | Rationale), 40% single-company cap compliance confirmation, a growth target pace assessment (current value vs. 1,150 CAD goal), explicit response to any human observer note, revisit conditions, and next-session action items.",
+          "verbose": true,
+          "backstory": "You are the CIO of an investment committee managing a CAD-denominated growth portfolio for a 24-week school project. The mandate is non-negotiable: any liquid listed stocks, with a strong tilt toward the technology sector and popular widely-followed companies. The performance objective is a 15% total return, meaning the portfolio must reach at least 1,150 CAD from a 1,000 CAD starting point by Week 24. You have seen dozens of market cycles and you know that both the PM's conviction and the Risk Officer's caution contain truth. Your job is to weigh the evidence on each side and reach the decision that best serves the portfolio's growth mandate. When the portfolio is on pace you may allow some risk management; when the portfolio is falling behind pace you lean toward the PM's more aggressive stance, but you never abandon mandate compliance. You document your reasoning transparently so the committee can learn from it week over week. Work only from the data provided in your input \\ never invent figures, prices, or portfolio values.",
+          "inject_date": true
+        }
+      },
+      "start": false,
+      "listen": "pm_proposal",
+      "router": false,
+      "description": "Phase 5 — The CIO chairs the debate, weighs the PM and Risk Officer positions, and renders a final reconciled investment decision with full rationale. Incorporates any human observer note. Always keeps the 15% growth target and tech-focused mandate (other sectors allowed) front of mind."
+    },
+    "research_lead_update": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "llm": {
+            "model": "gemini/gemini-3.5-flash-lite"
+          },
+          "goal": "Add qualitative context to the Analyst's summary by surfacing relevant news, macro themes, and sector trends affecting current or candidate holdings. New candidate positions may come from any sector or listed company, with a strong preference for the technology sector and widely-recognised, high-profile companies.",
+          "role": "Research Lead",
+          "input": "PRICE INTEGRITY RULES (mandatory): The only valid source of stock prices, price changes and the USD/CAD exchange rate is the get_market_quotes tool (or numbers explicitly copied from its output earlier in this committee record). Never estimate, recall, guess or invent a price, share count or FX rate. Always quote the as_of date with any price. If the tool returns an error for a ticker, say the price is unavailable and do not propose or approve a trade for it.\n\nAnalyst Summary:\n${outputs.analyst_data_intake.raw}\n\nFor each position identified in the Analyst Summary, and for the portfolio as a whole, conduct targeted research to surface:\n1. Relevant recent news (earnings, management changes, regulatory events, product launches) for each holding\n2. Macro-economic themes in play this week (interest rate expectations, inflation data, central bank signals) that are relevant to the portfolio\n3. Sector-level trends affecting the industries represented in the portfolio\n4. Candidate new positions (technology preferred, other sectors allowed) \\ strongly favour the technology sector and popular, widely-followed companies (e.g. mega-cap tech, high-coverage consumer names). For each candidate, state: ticker, sector, why it fits the tech/popular bias, and why it could help reach the 15% growth target (1,000 CAD to 1,150 CAD over 24 weeks).\n\nPresent your findings as a structured Research Update: one section per current holding, followed by the macro and sector overview, then a Candidate Positions section.\n\nExpected output: A structured Research Update with a per-holding news section for each current position, a macro themes section, a sector trends section, and a Candidate Positions section listing candidate stocks (tech-sector and popular companies prioritised), each with ticker, sector, investment thesis, and link to the 15% growth target. If no analyst data was provided, output: NO DATA: analyst summary returned nothing.",
+          "tools": [
+            "crewai_tools:EXASearchTool",
+            "custom:market_quotes"
+          ],
+          "verbose": true,
+          "backstory": "You are the Research Lead at an investment committee running a 24-week CAD-denominated growth portfolio. Your universe is any liquid listed stock, with a preference for technology. You have a clear mandate bias: favour the technology sector and popular, widely-followed companies (e.g. mega-cap tech names, household brands with high analyst coverage). You connect current events, macro-economic trends, and sector dynamics to specific portfolio positions and candidate ideas. You read widely, think thematically, and always ground your commentary in real, citable information rather than vague assertions. When recommending new candidates, you name liquid listed stocks and you always explain why each name fits the tech/popular bias and the 15% growth target. If the Analyst Summary is missing or empty, output: NO DATA: analyst summary returned nothing.",
+          "inject_date": true
+        }
+      },
+      "start": false,
+      "listen": "analyst_data_intake",
+      "router": false,
+      "description": "Phase 2 — The Research Lead reads the Analyst's summary and adds qualitative context: relevant news, macro themes, and sector trends affecting current or candidate holdings. Candidate positions may come from any sector, with a strong bias toward the tech sector and widely-followed popular companies."
+    },
+    "compile_session_recap": {
+      "do": {
+        "call": "agent",
+        "with": {
+          "llm": {
+            "model": "gemini/gemini-3.5-flash-lite"
+          },
+          "goal": "Compile a concise, structured check-in session recap for the investment committee.",
+          "role": "Session Coordinator",
+          "input": "Project configuration:\n- Start date: ${state.start_date}\n- End date: ${state.end_date}\n- Starting capital: $${state.starting_capital} CAD\n- Investment mandate: ${state.investment_mandate}\n- Check-in weekdays: ${state.checkin_weekday_1} and ${state.checkin_weekday_2}\n\nCurrent week number: ${state.current_week} of 24\n\nPortfolio ledger (authoritative source of truth for all current positions and cash):\n${state.ledger}\n\nFull session history (all prior weeks minutes and decisions):\n${state.session_history}\n\nUsing the above, compile a structured SESSION RECAP that includes:\n1. Week number and where we are in the 24-week programme\n2. LEDGER SNAPSHOT section: copy every field from the portfolio ledger exactly, including: cash on hand, and for each position: ticker, shares held, cost basis per share, current price, unrealised P&L. State total portfolio value. If positions array is empty or null, explicitly state: No open positions. Cash on hand: [amount] CAD.\n3. Last week final committee decision and any action items (or First session - no prior week if week 1)\n4. Brief note on cumulative realised P&L to date\n\nFormat clearly with a labelled LEDGER SNAPSHOT section so the Analyst can read exact share counts, cost basis, and cash balance without any ambiguity.\n\nExpected output: A structured session recap with a clearly labelled LEDGER SNAPSHOT section showing: cash on hand, every open position (ticker, exact share count, cost basis per share), total portfolio value, last weeks final decision, and cumulative P&L context. If no positions are held, state that explicitly. If any input data is missing, output: NO DATA: session context returned nothing. Estimated, remembered, or example values are never a substitute for real data.",
+          "verbose": true,
+          "backstory": "You are an experienced operations coordinator for an investment committee. You have full access to the portfolio ledger and session history and your job is to produce a clear, factual briefing document that orients every committee member before deliberations begin. Work only from what is provided in your input — never invent positions, prices, or cash balances. If the ledger is empty or null, state that explicitly.",
+          "inject_date": true
+        }
+      },
+      "start": true,
+      "router": false,
+      "description": "Reads the current week number, live ledger state, and last week's committee minutes, then compiles a session recap to hand to the Analyst."
+    },
+    "record_minutes_and_ledger": {
+      "do": {
+        "call": "crew",
+        "with": {
+          "tasks": [
+            {
+              "name": "write_minutes",
+              "agent": "minutes_writer",
+              "description": "Using the CIO final decision and the full session record, produce the official Committee Minutes for Week {current_week} of 24. Format as:\n\nINVESTMENT COMMITTEE MINUTES\nWeek {current_week} of 24\n\n1. Attendance: Analyst, Research Lead, Risk Officer, Portfolio Manager, CIO\n2. Portfolio Status at Open: headline figures from the Analyst Summary\n3. Research Highlights: two to three key points from the Research Update\n4. Risk Flags: key flags raised by the Risk Officer\n5. PM Proposals: the PM proposed actions in summary\n6. CIO Deliberation: the debate summary and how disagreements were resolved\n7. APPROVED DECISIONS: the final approved action for every position with sizing\n8. Revisit Conditions: triggers that would prompt an early review\n9. Action Items for Next Session\n\nFull session record:\nAnalyst Summary: {analyst_summary}\nResearch Update: {research_update}\nRisk Review: {risk_review}\nPM Proposal: {pm_proposal}\nCIO Final Decision: {cio_decision}\n\nIn the minutes, use only prices and figures from the Analyst Summary, PM Proposal, CIO Final Decision and the updated ledger from the update_ledger task. Never invent or recompute prices. If the ledger 'notes' mention dropped trades, list them under Action Items.",
+              "expected_output": "Polished, official Investment Committee Minutes for this week, formatted with all nine sections, ready to be stored as the permanent record."
+            },
+            {
+              "name": "update_ledger",
+              "agent": "ledger_updater",
+              "description": "Read the APPROVED TRADES TABLE in the CIO Final Decision. Build a JSON array of trades [{\"ticker\":\"XXX\",\"action\":\"BUY|INITIATE|SELL|REDUCE|HOLD\",\"shares\":<number or 0 if unspecified>,\"approx_cad_value\":<number>}]. Then call the apply_trades_to_ledger tool ONCE with ledger_json set to the current ledger below (use '{}' if it is empty or null) and trades_json set to that array. Return the tool's JSON output EXACTLY as returned, with no changes, no recalculation and no extra text. Do not apply any trade yourself.\n\nCurrent ledger: {ledger}\nCIO Final Decision: {cio_decision}",
+              "expected_output": "The exact JSON object returned by the apply_trades_to_ledger tool (cash, positions, total_value, realised_pnl, usd_cad, fx_rate_used, as_of, notes). No other text."
+            },
+            {
+              "name": "prepare_session_history_entry",
+              "agent": "minutes_writer",
+              "description": "Using the minutes from the write_minutes task and the updated ledger JSON from the update_ledger task, produce the session history entry for this week. Format it as a JSON object with these exact keys:\n- week: {current_week} (integer)\n- minutes: the full committee minutes text\n- final_decision: a concise one-paragraph summary of the CIO approved decisions\n- ledger_snapshot: an object with keys cash and total_value taken from the updated ledger JSON\n\nOutput ONLY a valid JSON object.",
+              "expected_output": "A JSON object with keys: week (integer), minutes (string), final_decision (string), ledger_snapshot (object with cash and total_value)."
+            },
+            {
+              "name": "emit_state_snapshot",
+              "agent": "minutes_writer",
+              "description": "Produce the complete state snapshot JSON that the frontend dashboard will read. Combine all session data into a single JSON object with these exact top-level keys:\n\n- initialized: true\n- current_week: {current_week} (integer)\n- starting_capital: {starting_capital} (number)\n- start_date: {start_date} (string)\n- end_date: {end_date} (string)\n- investment_mandate: {investment_mandate} (string)\n- checkin_weekday_1: {checkin_weekday_1} (string)\n- checkin_weekday_2: {checkin_weekday_2} (string)\n- ledger: the full updated ledger JSON object from the update_ledger task\n- session_history: an array containing ALL prior session history entries from {session_history} PLUS the new entry from the prepare_session_history_entry task appended at the end\n- this_week_outputs: an object with these keys:\n  - analyst: the analyst summary text from {analyst_summary}\n  - research: the research update text from {research_update}\n  - risk: the risk review text from {risk_review}\n  - pm: the PM proposal text from {pm_proposal}\n  - cio: the CIO decision text from {cio_decision}\n  - minutes: the full committee minutes text from the write_minutes task\n- approved_trades: an array parsed from the APPROVED TRADES TABLE in the CIO decision. Each element must have: ticker (string), action (string: BUY / SELL / REDUCE / HOLD / INITIATE), shares (number), approx_cad_value (number), rationale (string)\n\nOutput ONLY the valid JSON object. No prose, no markdown fences, no extra text.",
+              "expected_output": "A single valid JSON object containing initialized, current_week, starting_capital, start_date, end_date, investment_mandate, checkin_weekday_1, checkin_weekday_2, ledger (with CAD values and fx_rate_used), session_history (full array including this week), this_week_outputs (analyst, research, risk, pm, cio, minutes), and approved_trades (array with ticker, action, shares, approx_cad_value, rationale). No extra text."
+            }
+          ],
+          "agents": {
+            "ledger_updater": {
+              "llm": {
+                "model": "openai/gpt-5.4-mini"
+              },
+              "goal": "Apply the approved trades to the portfolio ledger by calling the apply_trades_to_ledger tool, and return its JSON output unchanged.",
+              "role": "Portfolio Ledger Administrator",
+              "verbose": true,
+              "backstory": "You are the portfolio ledger administrator. You never do arithmetic yourself and never invent prices or exchange rates: all share counts, cash, cost basis, P&L, FX and total value come from the apply_trades_to_ledger tool, which fetches live prices. You only translate the CIO's approved trades into the tool's JSON input and return the tool's output verbatim.",
+              "inject_date": true,
+              "tools": [
+                "custom:apply_trades"
+              ]
+            },
+            "minutes_writer": {
+              "llm": {
+                "model": "openai/gpt-5.4-mini"
+              },
+              "goal": "Format the CIO final decision as polished, official investment committee minutes and produce clean JSON data structures for the frontend.",
+              "role": "Committee Secretary",
+              "verbose": true,
+              "backstory": "You are the Committee Secretary responsible for turning deliberations and decisions into a permanent, professional record. Your minutes are clear, complete, and structured so any reader can understand what was decided, why, and what happens next without needing to read the full debate. When asked to produce JSON, you output only valid, parseable JSON with no surrounding markdown or prose.",
+              "inject_date": true
+            }
+          },
+          "inputs": {
+            "ledger": "${state.ledger}",
+            "end_date": "${state.end_date}",
+            "start_date": "${state.start_date}",
+            "pm_proposal": "${outputs.pm_proposal.raw}",
+            "risk_review": "${outputs.risk_officer_review.raw}",
+            "cio_decision": "${outputs.cio_committee_debate.raw}",
+            "current_week": "${state.current_week}",
+            "analyst_summary": "${outputs.analyst_data_intake.raw}",
+            "research_update": "${outputs.research_lead_update.raw}",
+            "session_history": "${state.session_history}",
+            "starting_capital": "${state.starting_capital}",
+            "checkin_weekday_1": "${state.checkin_weekday_1}",
+            "checkin_weekday_2": "${state.checkin_weekday_2}",
+            "investment_mandate": "${state.investment_mandate}"
+          },
+          "verbose": true
+        }
+      },
+      "start": false,
+      "listen": "cio_committee_debate",
+      "router": false,
+      "description": "Phase 6 — Formats the CIO's reconciled decision as official committee minutes, updates the portfolio ledger, records the session history entry, and emits a complete state snapshot JSON so the frontend can read all dashboard data from the run result."
+    }
+  },
+  "description": "A 24-week investment committee simulator for a school project. Five agents — Analyst, Research Lead, Risk Officer, Portfolio Manager, and CIO — deliberate each week during portfolio check-ins. The mandate: any listed stock, strong preference for the technology sector and popular widely-followed companies, with a performance target of 15% total return (1,000 CAD starting capital growing to at least 1,150 CAD by Week 24)."
+}

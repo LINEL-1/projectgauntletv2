@@ -184,12 +184,12 @@ function CountValue({ value }: { value: number }) {
 
 function SetupScreen({ onComplete }: { onComplete: (state: FlowState, runId: string) => void }) {
   const [form, setForm] = useState({
-    start_date: "2026-10-19",
-    end_date: "2027-04-05",
+    start_date: "2026-10-22",
+    end_date: "2027-04-08",
     starting_capital: "1000",
     investment_mandate: "The initial investment is exactly $1,000 CAD and no additional capital may be added; total spending on purchases may never exceed the available cash, so the portfolio can never be invested beyond $1,000 CAD of capital. Grow this $1,000 CAD starting portfolio to a $150 profit within 24 weeks. Invest primarily in technology stocks (software, semiconductors, hardware, AI, internet, cybersecurity), but other sectors are allowed too. No single company may exceed 40% of total portfolio value.",
-    checkin_weekday_1: "Monday",
-    checkin_weekday_2: "Thursday",
+    checkin_weekday_1: "Thursday",
+    checkin_weekday_2: "Monday",
   });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

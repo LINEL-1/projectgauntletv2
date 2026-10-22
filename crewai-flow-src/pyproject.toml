@@ -1,0 +1,26 @@
+[project]
+name = "prompt"
+version = "0.1.0"
+description = "prompt using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[file-processing,google-genai,litellm,tools]>=1.15.28,<2.0.0",
+    "exa-py",
+    "yfinance",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prompt"]
+
+[tool.crewai]
+type = "flow"
+definition = "src/prompt/flow.json"
+project_id = "aefeb3eb-002d-47cd-8b9c-5be9d0247f13"
+
+[tool.uv]
+override-dependencies = ["litellm<=1.82.6"]
