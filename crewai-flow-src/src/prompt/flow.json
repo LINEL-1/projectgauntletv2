@@ -172,7 +172,7 @@
         "call": "agent",
         "with": {
           "llm": {
-            "model": "gemini/gemini-3.5-flash"
+            "model": "gemini/gemini-3.1-flash-lite"
           },
           "goal": "Propose a specific, sized buy, sell, or hold action for each position and for any candidate new positions, justified against the investment mandate (technology preferred, other sectors allowed, 15% total return target over 24 weeks: 1,000 CAD growing to at least 1,150 CAD) and informed by the committee's prior outputs.",
           "role": "Portfolio Manager",
@@ -205,7 +205,7 @@
         "call": "agent",
         "with": {
           "llm": {
-            "model": "gemini/gemini-3.5-flash"
+            "model": "gemini/gemini-3.1-flash-lite"
           },
           "goal": "Assemble and return the complete session result JSON so the frontend can render every agent card, the portfolio ledger, the approved trades, and the committee minutes from a single API response.",
           "role": "Session Finalizer",
@@ -247,7 +247,7 @@
           "agents": {
             "analyst": {
               "llm": {
-                "model": "gemini/gemini-3.5-flash"
+                "model": "gemini/gemini-3.1-flash-lite"
               },
               "goal": "Summarise current portfolio holdings, cost basis, cash position, unrealised P&L, and recent price action for each position from the session recap.",
               "role": "Portfolio Analyst",
@@ -276,7 +276,7 @@
         "call": "agent",
         "with": {
           "llm": {
-            "model": "openrouter/nvidia/nemotron-3-super-120b-a12b"
+            "model": "gemini/gemini-3.1-flash-lite"
           },
           "goal": "Identify and articulate concentration risk, volatility concerns, and investment mandate compliance issues across the portfolio (technology preferred, other sectors allowed, 15% growth target of 1,000 CAD to 1,150 CAD), and explicitly challenge any overconfident positions.",
           "role": "Risk Officer",
@@ -296,7 +296,7 @@
         "call": "agent",
         "with": {
           "llm": {
-            "model": "gemini/gemini-3.5-flash"
+            "model": "gemini/gemini-3.1-flash-lite"
           },
           "goal": "Chair the investment committee debate, weigh the disagreement between the Portfolio Manager and Risk Officer, and render a final reconciled investment decision with full rationale. Every decision must respect the mandate: any listed stock, preference for technology sector and popular companies, and the overriding goal of growing the portfolio from 1,000 CAD to at least 1,150 CAD by Week 24.",
           "role": "Chief Investment Officer",
@@ -316,7 +316,7 @@
         "call": "agent",
         "with": {
           "llm": {
-            "model": "gemini/gemini-3.5-flash"
+            "model": "gemini/gemini-3.1-flash-lite"
           },
           "goal": "Add qualitative context to the Analyst's summary by surfacing relevant news, macro themes, and sector trends affecting current or candidate holdings. New candidate positions may come from any sector or listed company, with a strong preference for the technology sector and widely-recognised, high-profile companies.",
           "role": "Research Lead",
@@ -387,7 +387,7 @@
           "agents": {
             "ledger_updater": {
               "llm": {
-                "model": "gemini/gemini-3.5-flash"
+                "model": "gemini/gemini-3.1-flash-lite"
               },
               "goal": "Apply the approved trades to the portfolio ledger by calling the apply_trades_to_ledger tool, and return its JSON output unchanged.",
               "role": "Portfolio Ledger Administrator",
