@@ -277,7 +277,7 @@
         "call": "agent",
         "with": {
           "llm": {
-            "model": "nvidia_nim/nvidia/nemotron-3-super-120b-a12b"
+            "model": "openrouter/nvidia/nemotron-3-super-120b-a12b"
           },
           "goal": "Identify and articulate concentration risk, volatility concerns, and investment mandate compliance issues across the portfolio (technology preferred, other sectors allowed, 15% growth target of 1,000 CAD to 1,150 CAD), and explicitly challenge any overconfident positions.",
           "role": "Risk Officer",
